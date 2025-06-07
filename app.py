@@ -7,14 +7,14 @@ from sklearn.metrics import classification_report, accuracy_score
 
 # --- Judul Aplikasi ---
 st.title("🎓 Prediksi Status Kelulusan Mahasiswa")
-st.write("Gunakan model KNN untuk memprediksi apakah mahasiswa lulus tepat waktu atau terlambat.")
+st.write("Aplikasi ini menggunakan model KNN untuk memprediksi apakah mahasiswa akan lulus tepat waktu atau terlambat.")
 
 # --- Load Dataset ---
 @st.cache_data
 def load_data():
     df = pd.read_csv("kelulusan_mhs.csv")
-    df = df.drop(columns=["NAMA", "STATUS MAHASISWA"])  # Kolom tidak relevan
-    df = df.fillna(0)  # Ganti NaN jadi 0 (misalnya IPS 8 kosong)
+    df = df.drop(columns=["NAMA", "STATUS MAHASISWA"])  # Kolom tidak digunakan
+    df = df.fillna(0)  # Jika ada IPS kosong, isi dengan 0
     return df
 
 df = load_data()
@@ -26,7 +26,7 @@ le_dict = {}
 for col in label_cols:
     le = LabelEncoder()
     df[col] = le.fit_transform(df[col])
-    le_dict[col] = le  # Simpan encoder agar bisa dipakai kembali
+    le_dict[col] = le  # Simpan untuk inverse transform
 
 # --- Split Data ---
 X = df.drop(columns=['STATUS KELULUSAN'])
@@ -42,9 +42,9 @@ y_pred = knn.predict(X_test)
 akurasi = accuracy_score(y_test, y_pred)
 st.subheader("📊 Evaluasi Model")
 st.write(f"Akurasi: *{akurasi:.2f}*")
-st.text(classification_report(y_test, y_pred, target_names=le_dict['STATUS KELULUSAN'].classes_))
+st.text(classification_report(y_test, y_pred))  # Tidak pakai target_names agar aman
 
-# --- Form Input User ---
+# --- Form Input Data Baru ---
 st.subheader("📝 Input Data Mahasiswa Baru")
 
 jenis_kelamin = st.selectbox("Jenis Kelamin", le_dict['JENIS KELAMIN'].classes_)
@@ -71,4 +71,4 @@ if st.button("🔮 Prediksi Kelulusan"):
     hasil_prediksi = knn.predict(input_data)[0]
     hasil_label = le_dict['STATUS KELULUSAN'].inverse_transform([hasil_prediksi])[0]
 
-    st.success(f"📌 Prediksi: Mahasiswa akan *{hasil_label}* waktu.")
+    st.success(f"📌 Prediksi: Mahasiswa akan *{hasil_label.upper()}* waktu.")
